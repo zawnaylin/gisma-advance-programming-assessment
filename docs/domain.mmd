@@ -1,0 +1,39 @@
+classDiagram
+    class Table
+    Table: -String id
+    Table: -Integer capacity
+
+    class DiningStatus
+    DiningStatus: -String id
+    DiningStatus: -String name
+
+    class DiningSession
+    DiningSession: -String id
+    DiningSession: -DateTime startTime
+    DiningSession: -DateTime endTime
+    DiningSession: -Integer numberOfGuests
+    DiningSession: -String status
+    DiningSession "1" -- "1" Table: has
+    DiningSession "1" -- "0..*" Order: contains
+
+    class MenuCatalog
+    MenuCatalog: -String id
+    MenuCatalog: -String name
+    MenuCatalog "1" -- "0..*" MenuItem: contains
+
+    class MenuItem
+    MenuItem: -String id
+    MenuItem: -String name
+    MenuItem: -Float price
+    MenuItem: -String description
+
+    class Order
+    Order: -String id
+    Order "1" -- "0..*" OrderItem: contains
+
+    class OrderItem
+    OrderItem: -String id
+    OrderItem: -Integer quantity
+    OrderItem: -String specialInstructions
+
+

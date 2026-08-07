@@ -1,12 +1,25 @@
 # User Stories
 
+
+## US-00: Choose Table
+As a customer, I want to choose available table, so that I can go sit and order food without the waiter.
+
+**Acceptance criteria:**
+- Customer can see available tables in the restaurant
+- Customer can choose a table and receive a unique QR code for that table
+- Customer can see the status (Occupied, Reserved, Available) of each table in real time
+
 ## US-01: Scan QR code to view menu
 As a customer, I want to scan a QR code at my table, so that I can view
 the menu without waiting for a waiter.
 
 **Acceptance criteria:**
-- QR code encodes a unique table and order ID
-- Scanning opens the menu filtered to available items only
+- Each table has a static Table ID; the QR code encodes a unique,
+  rotating Session ID linked to that table for the current dining period
+- A new Session is generated each time a table transitions from
+  CLEANED → OCCUPIED, invalidating any previously scanned QR for that table
+- Scanning opens the menu filtered to available items only, scoped to
+  the active session
 - No login/account required
 
 ## US-02: Place an order
@@ -34,3 +47,18 @@ can prepare them in the correct sequence.
 - Staff view requires authentication
 - Orders are sortable/filterable by status
 - Staff can update order status
+
+## US-05: Update order status (kitchen/staff side)
+As kitchen staff, I want to update the status of an order, so that waiter can bring the food to the customer at the right time.
+
+**Acceptance criteria:**
+- Staff change order status to PREPARING, READY, SERVED.
+- Cook can change from PREPARING to READY, and waiter can change from READY to SERVED.
+- Status updates are reflected in real time on the customer side.
+
+## US-06: Cleaning up the table
+As a waiter, I want to mark a table as cleaned after the customer leaves, so that the table is ready for the next customer.
+
+**Acceptance criteria:**
+- Waiter can mark a table as CLEANED after the customer leaves.
+- Once marked as CLEANED, the table is available for new customers and the QR code can be reused for the next order.
