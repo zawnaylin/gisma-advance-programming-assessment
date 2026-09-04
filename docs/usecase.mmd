@@ -1,0 +1,28 @@
+flowchart LR
+    Customer["👤 Customer"]
+    Waiter["👤 Waiter"]
+    Kitchen["👤 Kitchen Staff"]
+
+    subgraph System["QR Restaurant Ordering System"]
+        UC0(["Choose Table"])
+        UC1(["Scan QR Code / View Menu"])
+        UC2(["Place Order"])
+        UC3(["Track Order Status"])
+        UC4(["View Incoming Orders"])
+        UC5(["Update Order Status"])
+        UC6(["Mark Table Cleaned"])
+    end
+
+    Customer --> UC0
+    Customer --> UC1
+    Customer --> UC2
+    Customer --> UC3
+
+    Kitchen --> UC4
+    Kitchen -->|PREPARING to READY| UC5
+    Waiter -->|READY to SERVED| UC5
+    Waiter --> UC6
+
+    UC2 -.->|"<<include>>"| UC1
+---
+usecase-beta
