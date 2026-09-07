@@ -1,52 +1,86 @@
-@startuml
+@startuml use-case
+title QR Restaurant Ordering System - Use Case Diagram
 
 left to right direction
-
-actor Customer as c
-
-rectangle "Restaurant Ordering System" {
-
-  usecase "Scan QR" as scan_qr
-  usecase "Choose Table" as choose_table
-  usecase "Place Order" as place_order
-  usecase "Track Order Status" as track_order
-  usecase "View Table" as view_table
-  usecase "View Menu" as view_menu
-
-  usecase "Accept Order" as accept_order
-  usecase "Reject Order" as reject_order
-  usecase "Complete Order" as complete_order
-
-  usecase "Serve Food" as serve_food
-
-  usecase "Settle the bill" as settle_bill
-  usecase "Clean table" as clean_table
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F5F9FF
+  BorderColor #4A78B5
+  ArrowColor #5B6B79
+  FontColor #26333F
+}
+skinparam actor {
+  BorderColor #4A78B5
+  BackgroundColor #F5F9FF
+  FontColor #26333F
+}
+skinparam note {
+  BackgroundColor #FFF9E6
+  BorderColor #D8C46A
 }
 
+actor Customer as c
+actor Staff as staff
 actor "Kitchen Staff" as ks
 actor Waiter as w
 
-' force horizontal ordering: Customer (left) ... staff (right)
-c -[hidden]right-> ks
-ks -[hidden]-> w
+ks --|> staff
+w --|> staff
 
-c -> choose_table
-choose_table .> view_table
+rectangle "QR Restaurant Ordering System" {
 
-c -> place_order
-place_order .> view_menu
-view_menu .> scan_qr
+  ' -- dining flow --
+  usecase "Choose Table"            as choose_table
+  usecase "View Table Availability" as view_table
+  usecase "Scan QR Code"            as scan_qr
+  usecase "View Menu"               as view_menu
+  usecase "Place Order"             as place_order
+  usecase "Track Order Status"      as track_order
 
-c -> track_order
+  ' -- staff flow --
+  usecase "Authenticate"            as authenticate
+  usecase "View Incoming Orders"    as view_orders
+  usecase "Update Order Status"     as update_status
+  usecase "Cancel Order"            as cancel_order
 
-ks -> accept_order
-ks -> reject_order
-ks -> complete_order
+  ' -- table lifecycle --
+  usecase "Mark Table Cleaned"      as clean_table
+}
 
-w -> serve_food
+' keep customer on the left, staff on the right
+c -[hidden]right- staff
 
-c -> settle_bill
+' ---- customer flow ----
+c --> choose_table
+choose_table ..> view_table : <<include>>
 
-w -> clean_table
+c --> scan_qr
+scan_qr ..> view_menu : <<include>>
+
+c --> place_order
+place_order ..> view_menu : <<include>>
+
+c --> track_order
+c --> cancel_order
+
+' ---- staff flow ----
+staff --> authenticate
+staff --> view_orders
+ks --> update_status
+w --> update_status
+ks --> cancel_order
+w --> clean_table
+
+note right of update_status
+  Kitchen Staff: PENDING -> CONFIRMED (accept & start cooking)
+  Kitchen Staff: CONFIRMED -> COMPLETED (ready to serve)
+  Waiter:        COMPLETED -> SERVED
+end note
+
+note bottom of cancel_order
+  Customer or Kitchen Staff.
+  Only allowed while status = PENDING.
+end note
 
 @enduml
