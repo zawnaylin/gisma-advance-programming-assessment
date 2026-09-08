@@ -1,18 +1,20 @@
 package com.qr_restaurant.table.web.controllers;
 
+import com.qr_restaurant.table.application.entities.QR;
 import com.qr_restaurant.table.application.entities.Table;
 import com.qr_restaurant.table.application.use_cases.commands.SelectTableCommand;
-import com.qr_restaurant.table.application.use_cases.dtos.QRDto;
 import com.qr_restaurant.table.application.use_cases.queries.GetQRForTableQuery;
 import com.qr_restaurant.table.application.use_cases.queries.ShowTablesQuery;
 import com.qr_restaurant.table.application.vo.TableId;
 import com.qr_restaurant.table.web.dtos.responses.GetQRResponseDto;
+import com.qr_restaurant.table.web.dtos.responses.GetTablesResponseDto;
+import com.qr_restaurant.table.web.dtos.responses.SelectTableResponseDto;
+import com.qr_restaurant.table.web.dtos.responses.common.QRDto;
+import com.qr_restaurant.table.web.dtos.responses.common.TableDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/tables")
@@ -23,16 +25,30 @@ public class TableController {
     private final SelectTableCommand selectTableCommand;
     private final GetQRForTableQuery getQRForTableQuery;
 
-    private final Converter<QRDto, GetQRResponseDto> getQRResponseDtoConverter;
+    private final Converter<QR, QRDto> qrDtoConverter;
+    private final Converter<Table, TableDto> tableDtoConverter;
 
     @GetMapping
-    public List<Table> getTables() {
-        return showTablesQuery.query();
+    public ResponseEntity<GetTablesResponseDto> getTables() {
+
+        var tables = showTablesQuery.query();
+
+        var body = tables.stream().map(tableDtoConverter::convert).toList();
+        var resp = new GetTablesResponseDto(body);
+
+        return ResponseEntity.ok(resp);
     }
 
     @PostMapping("/{id}/select")
-    public void selectTable(@PathVariable String id) {
+    public ResponseEntity<SelectTableResponseDto> selectTable(@PathVariable String id) {
         selectTableCommand.execute(new TableId(id));
+
+        var qr = getQRForTableQuery.query(new TableId(id));
+
+        var body = qrDtoConverter.convert(qr);
+        var resp = new SelectTableResponseDto(body);
+
+        return ResponseEntity.ok(resp);
     }
 
     @GetMapping("/{tableId}/qr")
@@ -44,8 +60,11 @@ public class TableController {
             return ResponseEntity.notFound().build();
         }
 
-        var resp = getQRResponseDtoConverter.convert(result);
+        var body = qrDtoConverter.convert(result);
+        var resp = new GetQRResponseDto(body);
 
         return ResponseEntity.ok(resp);
+
+
     }
 }
