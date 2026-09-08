@@ -1,0 +1,27 @@
+classDiagram
+    class Table
+    Table: -String id
+    Table: -Integer capacity
+    Table: -TableStatus status
+    Table ..> TableStatus: status
+
+    class TableStatus
+    <<enumeration>> TableStatus
+    TableStatus: AVAILABLE
+    TableStatus: OCCUPIED
+    TableStatus: WAITING_FOR_CLEANING
+
+    class DiningSession
+    DiningSession: -String id
+    DiningSession: -DateTime startTime
+    DiningSession: -DateTime endTime
+    DiningSession: -Integer numberOfGuests
+    DiningSession: -DiningStatus status
+    DiningSession "1" -- "1" Table: has
+    DiningSession ..> DiningStatus: status
+
+    class DiningStatus
+    <<enumeration>> DiningStatus
+    DiningStatus: ACTIVE
+    DiningStatus: WAITING_FOR_CHECK
+    DiningStatus: COMPLETED

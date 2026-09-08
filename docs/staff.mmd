@@ -1,0 +1,10 @@
+classDiagram
+    class Staff
+    Staff: -String id
+    Staff: -String name
+
+    class KitchenStaff
+    KitchenStaff --|> Staff
+
+    class Waiter
+    Waiter --|> Staff

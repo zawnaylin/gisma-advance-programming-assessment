@@ -1,4 +1,4 @@
-package com.qr_restaurant.app;
+package com.qr_restaurant;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

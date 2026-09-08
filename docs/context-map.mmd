@@ -1,0 +1,22 @@
+classDiagram
+    %% Module-level overview only - internal fields, enums, and
+    %% intra-module relationships live in each module's own diagram
+    %% (table.mmd, order.mmd, menu.mmd, staff.mmd).
+
+    %% table module
+    class DiningSession
+    DiningSession: -String id
+    DiningSession "1" -- "0..*" Order: contains
+
+    %% order module
+    class Order
+    Order: -String id
+    Order ..> MenuCatalogue: references MenuItem by id
+
+    %% menu module
+    class MenuCatalogue
+    MenuCatalogue: -String id
+
+    %% staff module (not yet implemented)
+    class Staff
+    Staff: -String id

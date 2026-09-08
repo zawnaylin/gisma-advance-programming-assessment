@@ -80,7 +80,7 @@ end note
 
 note bottom of cancel_order
   Customer or Kitchen Staff.
-  Only allowed while status = PENDING.
+  Only allowed while status = PENDING or CONFIRMED.
 end note
 
 @enduml

@@ -1,4 +1,4 @@
-package com.qr_restaurant.table.enums;
+package com.qr_restaurant.table.application.enums;
 
 public enum TableStatus {
     AVAILABLE,

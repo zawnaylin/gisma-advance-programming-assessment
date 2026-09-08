@@ -1,9 +1,9 @@
-package com.qr_restaurant.table.entities;
+package com.qr_restaurant.table.application.entities;
 
 import com.qr_restaurant.common.Domain;
 import com.qr_restaurant.common.StateMachine;
-import com.qr_restaurant.table.enums.DiningStatus;
-import com.qr_restaurant.table.vo.DiningSessionId;
+import com.qr_restaurant.table.application.enums.DiningStatus;
+import com.qr_restaurant.table.application.vo.DiningSessionId;
 
 import java.util.Date;
 

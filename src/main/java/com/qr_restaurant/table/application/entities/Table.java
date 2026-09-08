@@ -1,9 +1,9 @@
-package com.qr_restaurant.table.entities;
+package com.qr_restaurant.table.application.entities;
 
 import com.qr_restaurant.common.Domain;
 import com.qr_restaurant.common.StateMachine;
-import com.qr_restaurant.table.enums.TableStatus;
-import com.qr_restaurant.table.vo.TableId;
+import com.qr_restaurant.table.application.enums.TableStatus;
+import com.qr_restaurant.table.application.vo.TableId;
 
 
 public class Table extends Domain<TableId> {
@@ -37,7 +37,5 @@ public class Table extends Domain<TableId> {
         STATUS_TRANSITION.validate(this.status, target);
         this.status = target;
     }
-
-
 }
 

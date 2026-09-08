@@ -1,0 +1,20 @@
+classDiagram
+    class MenuCatalogue
+    MenuCatalogue: -String id
+    MenuCatalogue: -String name
+    MenuCatalogue: -String description
+    MenuCatalogue "1" *-- "0..*" MenuItem: lists
+
+    %% Category is reusable across catalogues (e.g. "Appetizers" on
+    %% both a Breakfast and a Dinner catalogue) - not owned by one.
+    class Category
+    Category: -String id
+    Category: -String name
+    Category: -String description
+    Category "1" -- "0..*" MenuItem: categorizes
+
+    class MenuItem
+    MenuItem: -String id
+    MenuItem: -String name
+    MenuItem: -String description
+    MenuItem: -Float price
