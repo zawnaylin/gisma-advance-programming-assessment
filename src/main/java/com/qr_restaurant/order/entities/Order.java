@@ -4,8 +4,12 @@ import com.qr_restaurant.common.Domain;
 import com.qr_restaurant.common.StateMachine;
 import com.qr_restaurant.order.enums.OrderStatus;
 import com.qr_restaurant.order.vo.OrderId;
+import com.qr_restaurant.table.application.vo.DiningSessionId;
 import lombok.Getter;
 
+import java.util.List;
+
+@Getter
 public class Order extends Domain<OrderId> {
 
     private static final StateMachine<OrderStatus> STATUS_TRANSITIONS = StateMachine.builder(OrderStatus.class)
@@ -14,13 +18,10 @@ public class Order extends Domain<OrderId> {
             .allow(OrderStatus.READY, OrderStatus.SERVED)
             .build();
 
-    @Getter
+    private DiningSessionId diningSessionId;
+    private List<OrderItem> items;
     private OrderStatus status;
-
-    @Getter
     private String cancelledBy;
-
-    @Getter
     private String cancellationReason;
 
     public Order() {
@@ -28,6 +29,13 @@ public class Order extends Domain<OrderId> {
 
     public Order(OrderId id) {
         super(id);
+        this.status = OrderStatus.PENDING;
+    }
+
+    public Order(OrderId id, DiningSessionId diningSessionId, List<OrderItem> items) {
+        super(id);
+        this.diningSessionId = diningSessionId;
+        this.items = items;
         this.status = OrderStatus.PENDING;
     }
 

@@ -4,8 +4,10 @@ import com.qr_restaurant.common.Domain;
 import com.qr_restaurant.common.StateMachine;
 import com.qr_restaurant.table.application.enums.TableStatus;
 import com.qr_restaurant.table.application.vo.TableId;
+import lombok.Getter;
 
 
+@Getter
 public class Table extends Domain<TableId> {
 
     private static final StateMachine<TableStatus> STATUS_TRANSITION = StateMachine.builder(TableStatus.class)
@@ -21,6 +23,12 @@ public class Table extends Domain<TableId> {
         this.status = TableStatus.AVAILABLE;
     }
 
+    public Table(TableId id, int capacity) {
+        super(id);
+        this.capacity = capacity;
+        this.status = TableStatus.AVAILABLE;
+    }
+
     public void take() {
         this.transitionTo(TableStatus.OCCUPIED);
     }
@@ -31,6 +39,13 @@ public class Table extends Domain<TableId> {
 
     public void clean() {
         this.transitionTo(TableStatus.AVAILABLE);
+    }
+
+    public void markCleaned() {
+        if (this.status == TableStatus.OCCUPIED) {
+            this.finish();
+        }
+        this.clean();
     }
 
     private void transitionTo(TableStatus target) {
