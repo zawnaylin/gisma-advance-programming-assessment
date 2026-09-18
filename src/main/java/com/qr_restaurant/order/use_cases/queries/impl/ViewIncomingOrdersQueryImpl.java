@@ -6,6 +6,7 @@ import com.qr_restaurant.order.repository.read.OrderReadRepository;
 import com.qr_restaurant.order.use_cases.queries.ViewIncomingOrdersQuery;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -21,6 +22,8 @@ class ViewIncomingOrdersQueryImpl implements ViewIncomingOrdersQuery {
     public List<Order> query(OrderStatus statusFilter) {
         return orderReadRepository.findAll().stream()
                 .filter(order -> statusFilter == null || order.getStatus() == statusFilter)
+                // Oldest first, so rows keep their place when the grid refreshes live.
+                .sorted(Comparator.comparing(Order::getPlacedAt))
                 .toList();
     }
 }

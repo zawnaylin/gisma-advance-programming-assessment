@@ -1,0 +1,21 @@
+stateDiagram-v2
+    [*] --> AVAILABLE
+    AVAILABLE --> OCCUPIED: seat(sessionId, guests)
+    OCCUPIED --> WAITING_FOR_CLEANING: endSession()
+    WAITING_FOR_CLEANING --> AVAILABLE: markCleaned()
+    WAITING_FOR_CLEANING --> [*]
+
+    note right of AVAILABLE
+        No active session
+        Table ready for guests
+    end note
+
+    note right of OCCUPIED
+        Dining session in progress
+        Guests ordering or dining
+    end note
+
+    note right of WAITING_FOR_CLEANING
+        Session ended
+        Table needs cleaning
+    end note

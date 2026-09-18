@@ -1,20 +1,23 @@
 classDiagram
     class MenuCatalogue
-    MenuCatalogue: -String id
+    MenuCatalogue: -MenuCatalogueId id
     MenuCatalogue: -String name
     MenuCatalogue: -String description
-    MenuCatalogue "1" *-- "0..*" MenuItem: lists
+    MenuCatalogue "1" -- "0..*" MenuItem: lists (MenuItem.catalogueId)
 
     %% Category is reusable across catalogues (e.g. "Appetizers" on
     %% both a Breakfast and a Dinner catalogue) - not owned by one.
     class Category
-    Category: -String id
+    Category: -CategoryId id
     Category: -String name
     Category: -String description
-    Category "1" -- "0..*" MenuItem: categorizes
+    Category "1" -- "0..*" MenuItem: categorizes (MenuItem.categoryId)
 
+    %% Items reference their catalogue and category by id rather than being owned by them.
     class MenuItem
-    MenuItem: -String id
+    MenuItem: -MenuItemId id
     MenuItem: -String name
     MenuItem: -String description
-    MenuItem: -Float price
+    MenuItem: -Double price
+    MenuItem: -MenuCatalogueId catalogueId
+    MenuItem: -CategoryId categoryId

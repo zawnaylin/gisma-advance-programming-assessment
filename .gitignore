@@ -40,3 +40,6 @@ src/main/frontend/generated/
 pnpmfile.js
 vite.generated.ts
 webpack.generated.js
+
+### Docker ###
+.env

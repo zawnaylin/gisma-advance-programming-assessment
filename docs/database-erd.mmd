@@ -1,0 +1,60 @@
+erDiagram
+    MENU_CATALOGUES ||--o{ MENU_ITEMS : contains
+    CATEGORIES ||--o{ MENU_ITEMS : categorizes
+    DINING_TABLES ||--o{ DINING_SESSIONS : has
+    ORDERS ||--o{ ORDER_ITEMS : contains
+
+    MENU_CATALOGUES {
+        string id PK
+        string name
+        string description
+    }
+
+    CATEGORIES {
+        string id PK
+        string name
+        string description
+    }
+
+    MENU_ITEMS {
+        string id PK
+        string name
+        string description
+        double price
+        string catalogue_id FK "references menu_catalogues(id)"
+        string category_id FK "references categories(id)"
+    }
+
+    DINING_TABLES {
+        string id PK
+        int capacity
+        string status "AVAILABLE, OCCUPIED, WAITING_FOR_CLEANING"
+        bigint version "optimistic lock"
+    }
+
+    DINING_SESSIONS {
+        string id PK
+        string table_id FK "references dining_tables(id)"
+        string status "ACTIVE, WAITING_FOR_CHECK, WAITING_FOR_CLEANING, COMPLETED"
+        timestamp start_time
+        timestamp end_time
+        int number_of_guests
+        bigint version "optimistic lock"
+    }
+
+    ORDERS {
+        string id PK
+        string dining_session_id "references dining_sessions(id)"
+        string status "PENDING, CONFIRMED, READY, SERVED, CANCELLED"
+        string cancelled_by
+        string cancellation_reason
+        timestamp placed_at
+    }
+
+    ORDER_ITEMS {
+        string id PK
+        string order_id FK "references orders(id)"
+        string menu_item_id FK "references menu_items(id)"
+        int quantity
+        double price "price snapshot at order time"
+    }

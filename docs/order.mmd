@@ -1,11 +1,22 @@
 classDiagram
     class Order
-    Order: -String id
+    <<AggregateRoot>> Order
+    Order: -OrderId id
+    Order: -DiningSessionId diningSessionId
     Order: -OrderStatus status
     Order: -String cancelledBy
     Order: -String cancellationReason
-    Order "1" -- "0..*" OrderItem: contains
+    Order: -Instant placedAt
+    Order: +confirmOrder()
+    Order: +markReady()
+    Order: +serve()
+    Order: +cancel(String cancelledBy, String cancellationReason)
+    Order: +canCancel() Boolean
+    Order: +isFinished() Boolean
+    Order "1" *-- "0..*" OrderItem: contains
     Order ..> OrderStatus: status
+    Order ..> OrderStatusChanged: publishes
+    note for Order "PENDING to CONFIRMED or CANCELLED<br>CONFIRMED to READY or CANCELLED<br>READY to SERVED<br>Only placed while its dining session is ACTIVE."
 
     class OrderStatus
     <<enumeration>> OrderStatus
@@ -16,8 +27,21 @@ classDiagram
     OrderStatus: CANCELLED
 
     class OrderItem
-    OrderItem: -String id
-    OrderItem: -String orderId
-    OrderItem: -String menuItemId
+    OrderItem: -OrderItemId id
+    OrderItem: -OrderId orderId
+    OrderItem: -MenuItemId menuItemId
     OrderItem: -Integer quantity
-    OrderItem: -Float price
+    OrderItem: -Double price
+    note for OrderItem "price is copied from the menu item<br>when the order is placed."
+
+    class OrderStatusChanged
+    <<event>> OrderStatusChanged
+    OrderStatusChanged: +OrderId orderId
+    OrderStatusChanged: +OrderStatus status
+    note for OrderStatusChanged "UI only: OrderStatusBroadcaster pushes it<br>to open kitchen views after commit."
+
+    class DiningSessionEndedListener
+    <<listener>> DiningSessionEndedListener
+    DiningSessionEndedListener: +on(DiningSessionEnded event)
+    DiningSessionEndedListener ..> Order: cancels PENDING / CONFIRMED
+    note for DiningSessionEndedListener "@ApplicationModuleListener: runs async<br>after the table module's transaction commits."

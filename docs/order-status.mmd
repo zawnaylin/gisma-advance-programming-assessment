@@ -1,0 +1,34 @@
+stateDiagram-v2
+    [*] --> PENDING
+    PENDING --> CONFIRMED: confirmOrder()
+    PENDING --> CANCELLED: cancel(by, reason)
+    CONFIRMED --> READY: markReady()
+    CONFIRMED --> CANCELLED: cancel(by, reason)
+    READY --> SERVED: serve()
+    SERVED --> [*]
+    CANCELLED --> [*]
+
+    note right of PENDING
+        Order just placed
+        Waiting for kitchen
+    end note
+
+    note right of CONFIRMED
+        Kitchen accepted order
+        Preparing food
+    end note
+
+    note right of READY
+        Food preparation complete
+        Ready for serving
+    end note
+
+    note right of SERVED
+        Final state
+        Order completed
+    end note
+
+    note right of CANCELLED
+        Final state
+        Order cancelled
+    end note

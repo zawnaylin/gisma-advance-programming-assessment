@@ -21,12 +21,8 @@ skinparam note {
 }
 
 actor Customer as c
-actor Staff as staff
 actor "Kitchen Staff" as ks
 actor Waiter as w
-
-ks --|> staff
-w --|> staff
 
 rectangle "QR Restaurant Ordering System" {
 
@@ -37,19 +33,24 @@ rectangle "QR Restaurant Ordering System" {
   usecase "View Menu"               as view_menu
   usecase "Place Order"             as place_order
   usecase "Track Order Status"      as track_order
+  usecase "End Order"               as end_order
 
-  ' -- staff flow --
-  usecase "Authenticate"            as authenticate
+  ' -- kitchen flow --
   usecase "View Incoming Orders"    as view_orders
   usecase "Update Order Status"     as update_status
   usecase "Cancel Order"            as cancel_order
 
   ' -- table lifecycle --
+  usecase "Show Table QR"           as show_qr
+  usecase "End Dining Session"      as end_session
   usecase "Mark Table Cleaned"      as clean_table
+
+  ' -- system --
+  usecase "Cancel Unfinished Orders" as cancel_unfinished
 }
 
-' keep customer on the left, staff on the right
-c -[hidden]right- staff
+' keep customer on the left, kitchen staff and waiter on the right
+c -[hidden]right- ks
 
 ' ---- customer flow ----
 c --> choose_table
@@ -62,25 +63,34 @@ c --> place_order
 place_order ..> view_menu : <<include>>
 
 c --> track_order
-c --> cancel_order
+c --> end_order
+end_order ..> cancel_unfinished : <<include>>
 
-' ---- staff flow ----
-staff --> authenticate
-staff --> view_orders
+' ---- kitchen staff and waiter flow ----
+ks --> view_orders
+w --> view_orders
 ks --> update_status
 w --> update_status
 ks --> cancel_order
+
+w --> show_qr
+w --> end_session
+end_session ..> cancel_unfinished : <<include>>
 w --> clean_table
 
-note right of update_status
-  Kitchen Staff: PENDING -> CONFIRMED (accept & start cooking)
-  Kitchen Staff: CONFIRMED -> COMPLETED (ready to serve)
-  Waiter:        COMPLETED -> SERVED
-end note
-
-note bottom of cancel_order
-  Customer or Kitchen Staff.
-  Only allowed while status = PENDING or CONFIRMED.
-end note
+legend bottom
+  <b>Rules</b>
+  * <b>View Table Availability</b> and <b>View Incoming Orders</b> update live (server push); unconfirmed (PENDING) orders show their items.
+  * <b>Update Order Status</b>: Kitchen Staff PENDING -> CONFIRMED -> READY; Waiter READY -> SERVED
+    (the Serve button is on the kitchen screen).
+  * Out of scope: staff accounts, login and role checks. The kitchen (/kitchen) and waiter (/staff/tables)
+    screens are open to anyone who knows the URL.
+  * <b>Cancel Order</b>: Kitchen Staff, only while PENDING or CONFIRMED.
+  * <b>End Order</b> (customer, confirms if orders are unfinished) and <b>End Dining Session</b> (waiter):
+    session -> WAITING_FOR_CLEANING (no more orders), table -> WAITING_FOR_CLEANING.
+  * <b>Cancel Unfinished Orders</b>: the order module reacts to the DiningSessionEnded event;
+    PENDING / CONFIRMED orders are cancelled, READY orders stay to be served.
+  * <b>Mark Table Cleaned</b>: only while WAITING_FOR_CLEANING; session -> COMPLETED, table -> AVAILABLE.
+endlegend
 
 @enduml

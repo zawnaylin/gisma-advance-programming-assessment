@@ -1,9 +1,22 @@
 classDiagram
+    %% Table is the aggregate root: a DiningSession is only created and changed through its table.
+    %% The table's status is not stored; it is derived from the current session (single source of truth).
+
     class Table
-    Table: -String id
+    <<AggregateRoot>> Table
+    Table: -TableId id
+    Table: -Long version
     Table: -Integer capacity
-    Table: -TableStatus status
-    Table ..> TableStatus: status
+    Table: -DiningSession currentSession
+    Table: +getStatus() TableStatus
+    Table: +seat(DiningSessionId sessionId, Integer numberOfGuests) DiningSession
+    Table: +endSession()
+    Table: +markCleaned()
+    Table "1" *-- "0..1" DiningSession: current session
+    Table ..> TableStatus: derives
+    Table ..> TableStatusChanged: publishes
+    Table ..> DiningSessionEnded: publishes
+    note for Table "Status derived from currentSession:<br>none = AVAILABLE, ACTIVE = OCCUPIED,<br>WAITING_FOR_CLEANING = WAITING_FOR_CLEANING.<br>@Version: concurrent seat / markCleaned conflict on the table row."
 
     class TableStatus
     <<enumeration>> TableStatus
@@ -12,16 +25,40 @@ classDiagram
     TableStatus: WAITING_FOR_CLEANING
 
     class DiningSession
-    DiningSession: -String id
-    DiningSession: -DateTime startTime
-    DiningSession: -DateTime endTime
-    DiningSession: -Integer numberOfGuests
+    DiningSession: -DiningSessionId id
+    DiningSession: -Long version
+    DiningSession: -TableId tableId
     DiningSession: -DiningStatus status
-    DiningSession "1" -- "1" Table: has
+    DiningSession: -Date startTime
+    DiningSession: -Date endTime
+    DiningSession: -Integer numberOfGuests
+    DiningSession: +isActive() Boolean
     DiningSession ..> DiningStatus: status
+    note for DiningSession "seat: ACTIVE<br>endSession: ACTIVE to WAITING_FOR_CLEANING (orders locked)<br>markCleaned: WAITING_FOR_CLEANING to COMPLETED (history)<br>Only ACTIVE sessions accept orders and have a QR code."
 
     class DiningStatus
     <<enumeration>> DiningStatus
     DiningStatus: ACTIVE
     DiningStatus: WAITING_FOR_CHECK
+    DiningStatus: WAITING_FOR_CLEANING
     DiningStatus: COMPLETED
+
+    class QR
+    QR: -Table table
+    QR: -DiningSession diningSession
+    QR: -String baseUrl
+    QR: +generateUrl() String
+    QR ..> Table
+    QR ..> DiningSession
+
+    class TableStatusChanged
+    <<event>> TableStatusChanged
+    TableStatusChanged: +TableId tableId
+    TableStatusChanged: +TableStatus status
+    note for TableStatusChanged "UI only: TableStatusBroadcaster pushes it<br>to open table views after commit."
+
+    class DiningSessionEnded
+    <<event>> DiningSessionEnded
+    DiningSessionEnded: +DiningSessionId sessionId
+    DiningSessionEnded: +TableId tableId
+    note for DiningSessionEnded "Stored in the event publication registry;<br>handled by the order module."

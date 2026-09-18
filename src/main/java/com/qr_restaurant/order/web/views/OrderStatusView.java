@@ -4,6 +4,7 @@ import com.qr_restaurant.order.entities.OrderItem;
 import com.qr_restaurant.order.use_cases.queries.TrackOrderStatusQuery;
 import com.qr_restaurant.order.vo.OrderId;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
@@ -51,5 +52,6 @@ public class OrderStatusView extends VerticalLayout implements BeforeEnterObserv
         add(new Span("Total: $" + total));
 
         add(new Button("Refresh", e -> buildUi()));
+        add(new Anchor("menu/" + order.getDiningSessionId().value(), "Back to menu"));
     }
 }

@@ -1,93 +1,86 @@
-# advanced-programming-assessment
+# QR Restaurant
 
+A QR-code ordering system for restaurants. Customers scan a QR code at their table to view the menu, place
+orders and track their status; kitchen staff work through incoming orders and waiters manage tables from their
+own screens. Built with Spring Boot, Spring Modulith and Vaadin, backed by PostgreSQL.
 
+## Running the app
 
-## Getting started
+The app stores its data in PostgreSQL. The schema is managed by Flyway migrations in
+`src/main/resources/db/migration`.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+### With Docker Compose (deployment)
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/zawnaylin-group/advanced-programming-assessment.git
-git branch -M main
-git push -uf origin main
+cp .env.example .env   # set POSTGRES_PASSWORD and APP_BASE_URL
+docker compose up -d --build
 ```
 
-## Integrate with your tools
+The app is served on http://localhost:8080. `APP_BASE_URL` is encoded into the table QR codes, so set it to an
+address customers' phones can reach (e.g. the host's LAN IP or domain). Data is kept in the `pgdata` volume;
+`docker compose down -v` deletes it.
 
-* [Set up project integrations](https://gitlab.com/zawnaylin-group/advanced-programming-assessment/-/settings/integrations)
+### Locally from the IDE
 
-## Collaborate with your team
+Start only the database, then run `Application` as usual (it connects to `localhost:5432` by default):
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+```
+docker compose up -d db
+```
 
-## Test and Deploy
+Connection settings can be overridden with the `DB_URL`, `DB_USERNAME` and `DB_PASSWORD` environment variables.
 
-Use the built-in continuous integration in GitLab.
+### Tests
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+`./mvnw test` starts a throwaway PostgreSQL container through Testcontainers, so Docker must be running.
 
-***
+## Managing the menu and tables (REST API)
 
-# Editing this README
+Full endpoint reference: [docs/rest-api.md](docs/rest-api.md). A Postman collection with tests for every
+endpoint is in [docs/postman](docs/postman).
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Catalogues, categories, menu items and tables have no admin screen; manage them over REST. Each resource supports
+`GET` (list), `GET /{id}`, `POST`, `PUT /{id}` and `DELETE /{id}`:
 
-## Suggestions for a good README
+| Resource   | Path                    | Body fields                                                          |
+|------------|-------------------------|----------------------------------------------------------------------|
+| Catalogue  | `/api/menu/catalogues`  | `id` (create only, optional), `name`, `description`                  |
+| Category   | `/api/menu/categories`  | `id` (create only, optional), `name`, `description`                  |
+| Menu item  | `/api/menu/items`       | `id` (create only, optional), `name`, `description`, `price`, `catalogueId`, `categoryId` |
+| Table      | `/api/tables`           | `id` (create only, optional), `capacity`                             |
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+A table's status is derived from its dining session, so it is read-only; `PUT` changes the capacity. A table can
+only be deleted while nobody is seated and before it has any dining sessions, so that history is never lost.
+`/api/tables/{id}/select` (start a session) and `/api/tables/{id}/qr` are part of the dining flow, not of CRUD.
 
-## Name
-Choose a self-explaining name for your project.
+`GET /api/menu/items` can be filtered with `?catalogueId=` and/or `?categoryId=`.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```
+curl -X POST localhost:8080/api/menu/categories -H 'Content-Type: application/json' \
+     -d '{"id": "desserts", "name": "Desserts", "description": "Sweet things"}'
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+curl -X POST localhost:8080/api/menu/items -H 'Content-Type: application/json' \
+     -d '{"id": "cheesecake", "name": "Cheesecake", "price": 6.5, "catalogueId": "all-day", "categoryId": "desserts"}'
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+curl -X PUT localhost:8080/api/menu/items/cheesecake -H 'Content-Type: application/json' \
+     -d '{"name": "Cheesecake", "description": "Baked", "price": 7, "catalogueId": "all-day", "categoryId": "desserts"}'
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+curl -X DELETE localhost:8080/api/menu/items/cheesecake
+```
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- `POST` returns `201 Created` with a `Location` header; without an `id` a UUID is generated. Ids may only contain
+  letters, digits, `-` and `_`.
+- `PUT` replaces all fields and returns `404` if the id doesn't exist (it never creates).
+- Errors use RFC 9457 problem details: `400` invalid body or unknown `catalogueId`/`categoryId`, `404` unknown id,
+  `409` id already taken or a catalogue/category that menu items still use.
+- Deleting a menu item doesn't affect past orders; they keep the item id and the price they were placed at.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+## Design docs
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+More background on the design lives in [docs](docs):
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- [`use-case.puml`](docs/use-case.puml) / [`usecase.mmd`](docs/usecase.mmd) — use case diagrams
+- [`context-map.mmd`](docs/context-map.mmd) — module boundaries and how they talk to each other
+- [`menu.mmd`](docs/menu.mmd), [`order.mmd`](docs/order.mmd), [`table.mmd`](docs/table.mmd) — per-module domain models
+- [`database.md`](docs/database.md) — why PostgreSQL
+- [`user-stories.md`](docs/user-stories.md) — user stories and acceptance criteria

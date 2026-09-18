@@ -1,0 +1,27 @@
+stateDiagram-v2
+    [*] --> ACTIVE
+    ACTIVE --> WAITING_FOR_CHECK: requestCheck()
+    ACTIVE --> WAITING_FOR_CLEANING: end()
+    WAITING_FOR_CHECK --> WAITING_FOR_CLEANING: end()
+    WAITING_FOR_CLEANING --> COMPLETED: complete()
+    COMPLETED --> [*]
+
+    note right of ACTIVE
+        Session started
+        Guests can order
+    end note
+
+    note right of WAITING_FOR_CHECK
+        Guests requested check
+        No new orders accepted
+    end note
+
+    note right of WAITING_FOR_CLEANING
+        Dining session ended
+        Table awaiting cleaning
+    end note
+
+    note right of COMPLETED
+        Table cleaned
+        Session closed
+    end note

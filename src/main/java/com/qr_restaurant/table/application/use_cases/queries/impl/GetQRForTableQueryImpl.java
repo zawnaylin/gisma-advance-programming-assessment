@@ -3,7 +3,6 @@ package com.qr_restaurant.table.application.use_cases.queries.impl;
 import com.qr_restaurant.table.application.entities.QR;
 import com.qr_restaurant.table.application.use_cases.queries.GetQRForTableQuery;
 import com.qr_restaurant.table.application.vo.TableId;
-import com.qr_restaurant.table.repository.read.DiningSessionReadRepository;
 import com.qr_restaurant.table.repository.read.TableReadRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,14 +11,10 @@ import org.springframework.stereotype.Service;
 class GetQRForTableQueryImpl implements GetQRForTableQuery {
 
     private final TableReadRepository tableReadRepository;
-    private final DiningSessionReadRepository diningSessionReadRepository;
     private final String baseUrl;
 
-    GetQRForTableQueryImpl(TableReadRepository tableReadRepository,
-                            DiningSessionReadRepository diningSessionReadRepository,
-                            @Value("${app.base-url}") String baseUrl) {
+    GetQRForTableQueryImpl(TableReadRepository tableReadRepository, @Value("${app.base-url}") String baseUrl) {
         this.tableReadRepository = tableReadRepository;
-        this.diningSessionReadRepository = diningSessionReadRepository;
         this.baseUrl = baseUrl;
     }
 
@@ -30,8 +25,9 @@ class GetQRForTableQueryImpl implements GetQRForTableQuery {
             return null;
         }
 
-        var session = diningSessionReadRepository.findActiveByTableId(id).orElse(null);
-        if (session == null) {
+        // Only a session customers can still order in has a usable QR code.
+        var session = table.getCurrentSession();
+        if (session == null || !session.isActive()) {
             return null;
         }
 

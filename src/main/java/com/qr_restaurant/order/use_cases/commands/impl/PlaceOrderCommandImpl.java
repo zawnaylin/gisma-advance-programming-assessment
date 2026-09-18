@@ -8,24 +8,34 @@ import com.qr_restaurant.order.use_cases.commands.PlaceOrderCommand;
 import com.qr_restaurant.order.use_cases.commands.dtos.PlaceOrderDto;
 import com.qr_restaurant.order.vo.OrderId;
 import com.qr_restaurant.order.vo.OrderItemId;
+import com.qr_restaurant.table.application.use_cases.queries.IsDiningSessionActiveQuery;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Transactional
 class PlaceOrderCommandImpl implements PlaceOrderCommand {
 
     private final OrderRepository orderRepository;
     private final GetMenuItemQuery getMenuItemQuery;
+    private final IsDiningSessionActiveQuery isDiningSessionActiveQuery;
 
-    PlaceOrderCommandImpl(OrderRepository orderRepository, GetMenuItemQuery getMenuItemQuery) {
+    PlaceOrderCommandImpl(OrderRepository orderRepository, GetMenuItemQuery getMenuItemQuery,
+                          IsDiningSessionActiveQuery isDiningSessionActiveQuery) {
         this.orderRepository = orderRepository;
         this.getMenuItemQuery = getMenuItemQuery;
+        this.isDiningSessionActiveQuery = isDiningSessionActiveQuery;
     }
 
     @Override
     public OrderId execute(PlaceOrderDto request) {
+        if (!isDiningSessionActiveQuery.query(request.diningSessionId())) {
+            throw new IllegalStateException("Dining session is not accepting orders: " + request.diningSessionId().value());
+        }
+
         var orderId = new OrderId(UUID.randomUUID().toString());
 
         List<OrderItem> items = request.items().stream()

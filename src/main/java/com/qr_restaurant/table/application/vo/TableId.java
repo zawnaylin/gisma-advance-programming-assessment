@@ -1,4 +1,9 @@
 package com.qr_restaurant.table.application.vo;
 
-public record TableId(String value) {
+import jakarta.persistence.Embeddable;
+
+import java.io.Serializable;
+
+@Embeddable
+public record TableId(String value) implements Serializable {
 }

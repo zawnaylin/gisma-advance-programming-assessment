@@ -5,8 +5,12 @@ import com.qr_restaurant.table.application.vo.TableId;
 import com.qr_restaurant.table.repository.TableRepository;
 import com.qr_restaurant.table.repository.read.TableReadRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.NoSuchElementException;
 
 @Service
+@Transactional
 class MarkTableCleanedCommandImpl implements MarkTableCleanedCommand {
 
     private final TableRepository tableRepository;
@@ -20,8 +24,9 @@ class MarkTableCleanedCommandImpl implements MarkTableCleanedCommand {
     @Override
     public void execute(TableId id) {
         var table = tableReadRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No such table: " + id.value()));
+                .orElseThrow(() -> new NoSuchElementException("No such table: " + id.value()));
 
+        // Only a table whose dining session has ended (WAITING_FOR_CLEANING) can be cleaned.
         table.markCleaned();
         tableRepository.save(table);
     }

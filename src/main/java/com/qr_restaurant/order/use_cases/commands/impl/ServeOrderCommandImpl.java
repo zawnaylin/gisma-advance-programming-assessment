@@ -5,8 +5,12 @@ import com.qr_restaurant.order.repository.read.OrderReadRepository;
 import com.qr_restaurant.order.use_cases.commands.ServeOrderCommand;
 import com.qr_restaurant.order.vo.OrderId;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.NoSuchElementException;
 
 @Service
+@Transactional
 class ServeOrderCommandImpl implements ServeOrderCommand {
 
     private final OrderRepository orderRepository;
@@ -20,7 +24,7 @@ class ServeOrderCommandImpl implements ServeOrderCommand {
     @Override
     public void execute(OrderId id) {
         var order = orderReadRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No such order: " + id.value()));
+                .orElseThrow(() -> new NoSuchElementException("No such order: " + id.value()));
 
         order.serve();
         orderRepository.save(order);

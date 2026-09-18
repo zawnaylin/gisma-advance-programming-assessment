@@ -4,23 +4,35 @@ flowchart LR
     Kitchen["👤 Kitchen Staff"]
 
     subgraph System["QR Restaurant Ordering System"]
-        UC0(["Choose Table"])
+        UC0(["Choose Table (live availability)"])
         UC1(["Scan QR Code / View Menu"])
         UC2(["Place Order"])
         UC3(["Track Order Status"])
-        UC4(["View Incoming Orders"])
+        UC7(["End Order"])
+        UC4(["View Incoming Orders (live, items of unconfirmed orders)"])
         UC5(["Update Order Status"])
+        UC9(["Cancel Order"])
+        UC8(["Show Table QR"])
+        UC10(["End Dining Session"])
         UC6(["Mark Table Cleaned"])
+        UC11(["Cancel Unfinished Orders"])
     end
 
     Customer --> UC0
     Customer --> UC1
     Customer --> UC2
     Customer --> UC3
+    Customer -->|"confirms if orders are unfinished"| UC7
 
     Kitchen --> UC4
-    Kitchen -->|PREPARING to READY| UC5
-    Waiter -->|READY to SERVED| UC5
-    Waiter --> UC6
+    Kitchen -->|"PENDING to CONFIRMED, CONFIRMED to READY"| UC5
+    Waiter -->|"READY to SERVED"| UC5
+    Kitchen -->|"while PENDING or CONFIRMED"| UC9
 
-    UC2 -.->|"<<include>>"| UC1
+    Waiter --> UC8
+    Waiter -->|"admin control"| UC10
+    Waiter -->|"only while WAITING_FOR_CLEANING"| UC6
+
+    UC2 -.->|"«include»"| UC1
+    UC7 -.->|"«include»"| UC11
+    UC10 -.->|"«include»"| UC11

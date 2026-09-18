@@ -6,6 +6,7 @@ import com.qr_restaurant.menu.entities.MenuItem;
 import com.qr_restaurant.menu.repository.CategoryRepository;
 import com.qr_restaurant.menu.repository.MenuCatalogueRepository;
 import com.qr_restaurant.menu.repository.MenuItemRepository;
+import com.qr_restaurant.menu.repository.read.MenuCatalogueReadRepository;
 import com.qr_restaurant.menu.vo.CategoryId;
 import com.qr_restaurant.menu.vo.MenuCatalogueId;
 import com.qr_restaurant.menu.vo.MenuItemId;
@@ -18,17 +19,25 @@ class MenuDataSeeder {
     private final MenuCatalogueRepository menuCatalogueRepository;
     private final CategoryRepository categoryRepository;
     private final MenuItemRepository menuItemRepository;
+    private final MenuCatalogueReadRepository menuCatalogueReadRepository;
 
     MenuDataSeeder(MenuCatalogueRepository menuCatalogueRepository,
                    CategoryRepository categoryRepository,
-                   MenuItemRepository menuItemRepository) {
+                   MenuItemRepository menuItemRepository,
+                   MenuCatalogueReadRepository menuCatalogueReadRepository) {
         this.menuCatalogueRepository = menuCatalogueRepository;
         this.categoryRepository = categoryRepository;
         this.menuItemRepository = menuItemRepository;
+        this.menuCatalogueReadRepository = menuCatalogueReadRepository;
     }
 
     @PostConstruct
     void seed() {
+        // Data persists across restarts, so only seed an empty database.
+        if (!menuCatalogueReadRepository.findAll().isEmpty()) {
+            return;
+        }
+
         var allDayMenu = new MenuCatalogue(new MenuCatalogueId("all-day"), "All Day Menu", "Available any time");
         menuCatalogueRepository.save(allDayMenu);
 

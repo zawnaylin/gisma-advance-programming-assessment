@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-qr_restaurant}
+      POSTGRES_USER: ${POSTGRES_USER:-qr_restaurant}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-qr_restaurant}
+    volumes:
+      # Postgres 18+ images keep data under /var/lib/postgresql/<version>/
+      - pgdata:/var/lib/postgresql
+    ports:
+      # Bound to localhost only, so the app can also be run from the IDE against this DB.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    image: qr-restaurant:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-qr_restaurant}
+      DB_USERNAME: ${POSTGRES_USER:-qr_restaurant}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-qr_restaurant}
+      # Must be reachable from customers' phones, since it is encoded into the table QR codes.
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+volumes:
+  pgdata:

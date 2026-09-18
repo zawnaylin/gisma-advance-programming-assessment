@@ -1,22 +1,47 @@
 classDiagram
     %% Module-level overview only - internal fields, enums, and
     %% intra-module relationships live in each module's own diagram
-    %% (table.mmd, order.mmd, menu.mmd, staff.mmd).
+    %% (table.mmd, order.mmd, menu.mmd).
+    %% There is no staff module: staff accounts, login and roles are out of scope.
+    %% Modules only talk through exposed named interfaces (vo, events, commands, queries),
+    %% verified by ModularityTests. order depends on table and menu; table depends on neither,
+    %% so table informs order through the DiningSessionEnded event instead of a call.
+    %% common (shared kernel): Domain base class, StateMachine, UiBroadcaster.
 
-    %% table module
-    class DiningSession
-    DiningSession: -String id
-    DiningSession "1" -- "0..*" Order: contains
+    namespace table {
+        class Table {
+            <<AggregateRoot>>
+            -TableId id
+        }
+        class DiningSession {
+            -DiningSessionId id
+        }
+        class DiningSessionEnded {
+            <<event>>
+        }
+    }
 
-    %% order module
-    class Order
-    Order: -String id
-    Order ..> MenuCatalogue: references MenuItem by id
+    namespace order {
+        class Order {
+            <<AggregateRoot>>
+            -OrderId id
+            -DiningSessionId diningSessionId
+        }
+        class DiningSessionEndedListener {
+            <<listener>>
+        }
+    }
 
-    %% menu module
-    class MenuCatalogue
-    MenuCatalogue: -String id
+    namespace menu {
+        class MenuItem {
+            -MenuItemId id
+        }
+    }
 
-    %% staff module (not yet implemented)
-    class Staff
-    Staff: -String id
+    Table "1" *-- "0..1" DiningSession: current session
+    Table ..> DiningSessionEnded: publishes
+    Order ..> Table: IsDiningSessionActiveQuery, EndDiningSessionCommand
+    Order ..> MenuItem: GetMenuItemQuery (by MenuItemId)
+    DiningSessionEndedListener ..> DiningSessionEnded: listens async
+    DiningSessionEndedListener ..> Order: cancels unfinished
+

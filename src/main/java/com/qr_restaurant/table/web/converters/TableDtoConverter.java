@@ -11,7 +11,7 @@ public class TableDtoConverter implements Converter<Table, TableDto> {
     public TableDto convert(Table source) {
         return new TableDto(
                 source.getId().value(),
-                String.valueOf(source.getCapacity()),
+                source.getCapacity(),
                 source.getStatus().name()
         );
     }

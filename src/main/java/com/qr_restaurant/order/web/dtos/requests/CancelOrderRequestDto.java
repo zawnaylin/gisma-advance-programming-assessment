@@ -1,4 +1,9 @@
 package com.qr_restaurant.order.web.dtos.requests;
 
-public record CancelOrderRequestDto(String cancelledBy, String reason) {
+import jakarta.validation.constraints.NotBlank;
+
+public record CancelOrderRequestDto(
+        @NotBlank String cancelledBy,
+        String reason
+) {
 }

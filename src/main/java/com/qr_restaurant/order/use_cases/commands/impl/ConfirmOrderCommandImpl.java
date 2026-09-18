@@ -5,8 +5,12 @@ import com.qr_restaurant.order.repository.read.OrderReadRepository;
 import com.qr_restaurant.order.use_cases.commands.ConfirmOrderCommand;
 import com.qr_restaurant.order.vo.OrderId;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.NoSuchElementException;
 
 @Service
+@Transactional
 class ConfirmOrderCommandImpl implements ConfirmOrderCommand {
 
     private final OrderRepository orderRepository;
@@ -20,7 +24,7 @@ class ConfirmOrderCommandImpl implements ConfirmOrderCommand {
     @Override
     public void execute(OrderId id) {
         var order = orderReadRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No such order: " + id.value()));
+                .orElseThrow(() -> new NoSuchElementException("No such order: " + id.value()));
 
         order.confirmOrder();
         orderRepository.save(order);

@@ -6,8 +6,12 @@ import com.qr_restaurant.order.use_cases.commands.CancelOrderCommand;
 import com.qr_restaurant.order.use_cases.commands.dtos.CancelOrderDto;
 import com.qr_restaurant.order.vo.OrderId;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.NoSuchElementException;
 
 @Service
+@Transactional
 class CancelOrderCommandImpl implements CancelOrderCommand {
 
     private final OrderRepository orderRepository;
@@ -21,7 +25,7 @@ class CancelOrderCommandImpl implements CancelOrderCommand {
     @Override
     public void execute(OrderId id, CancelOrderDto request) {
         var order = orderReadRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No such order: " + id.value()));
+                .orElseThrow(() -> new NoSuchElementException("No such order: " + id.value()));
 
         order.cancel(request.cancelledBy(), request.reason());
         orderRepository.save(order);

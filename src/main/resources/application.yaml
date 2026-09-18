@@ -1,9 +1,28 @@
 spring:
   application:
     name: app
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/qr_restaurant}
+    username: ${DB_USERNAME:qr_restaurant}
+    password: ${DB_PASSWORD:qr_restaurant}
+  jpa:
+    # Schema is owned by Flyway (src/main/resources/db/migration); Hibernate only checks it matches.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  mvc:
+    # RFC 9457 error bodies (e.g. which request field failed validation) instead of empty 400s.
+    problemdetails:
+      enabled: true
+  modulith:
+    events:
+      # Re-run listeners whose events were published but never completed (e.g. the app crashed).
+      republish-outstanding-events-on-restart: true
+      # Only cross-module listeners go into the publication registry; UI refresh listeners
+      # (TableStatusBroadcaster) are not worth persisting or replaying after a restart.
+      registry-trigger-annotation: org.springframework.modulith.events.ApplicationModuleListener
 
 app:
   # Override with the machine's LAN IP (e.g. http://192.168.1.23:8080) so a
   # phone on the same WiFi can actually reach and scan the generated QR code.
-  #  base-url: http://localhost:8080
-  base-url: http://192.168.20.43:8080
+  base-url: ${APP_BASE_URL:http://192.168.20.43:8080}

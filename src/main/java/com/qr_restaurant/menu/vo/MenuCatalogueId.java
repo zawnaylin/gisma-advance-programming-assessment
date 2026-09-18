@@ -1,4 +1,9 @@
 package com.qr_restaurant.menu.vo;
 
-public record MenuCatalogueId(String value) {
+import jakarta.persistence.Embeddable;
+
+import java.io.Serializable;
+
+@Embeddable
+public record MenuCatalogueId(String value) implements Serializable {
 }
